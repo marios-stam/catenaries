@@ -57,6 +57,12 @@ def getCatenaryCurve2D(P1, P2, L):
     x1, y1 = P1
     x2, y2 = P2
 
+    inverse = False
+    if x1 > x2:
+        x1, x2 = x2, x1
+        y1, y2 = y2, y1
+        inverse = True
+
     dx = x2-x1
     dy = y2-y1
 
@@ -64,6 +70,8 @@ def getCatenaryCurve2D(P1, P2, L):
     yb = (x1+x2)/2
 
     assert L**2 > dy**2+dx**2, "No solution,the points are too far apart"
+
+    assert dx > 0, "The points are not in the correct order"
 
     r = sqrt(L**2-dy**2)/dx
 
@@ -87,12 +95,15 @@ def getCatenaryCurve2D(P1, P2, L):
         counter = counter+1
 
     if xy[-1][0] == 0 and xy[-1][1] == 0:
-        print("mlkia:", length)
+        print("length:", length)
         xy = xy[:-1, :]  # delete last row
     else:
         pass
 
-    return xy
+    if inverse:
+        return xy[::-1, :]
+    else:
+        return xy
 
 
 def getCatenaryCurve3D(P1, P2, L, ax=None):
@@ -102,7 +113,11 @@ def getCatenaryCurve3D(P1, P2, L, ax=None):
     trans = Transformation(rotation, translation=P1)
     p2_1 = trans.transformPoint(P2)
 
+    print("========================================================")
+    t0 = time.time()
     s, coords2D_x, coords2D_y = get2DProjection(list(P1), list(P2))
+    dt = time.time()-t0
+    print("2D projection calculation time: {} ms".format(dt*1000))
 
     start2D = [0, 0]
     ennd2D = [coords2D_x, coords2D_y]

@@ -1,3 +1,4 @@
+import time
 import numpy as np
 from skspatial.objects import plane
 from sympy import Plane
@@ -19,12 +20,20 @@ def normalize(a):
 
 
 def get2DProjection(origin, target_point):
+    t = time.time()
+    print("origin:", origin)
+    print("target_point:", target_point)
+
     points = [origin,
               target_point,
               [target_point[0], target_point[1], target_point[2] + 1]]  # add 1 in order not to be collinear
 
     plane = Plane(points[0], points[1], points[2])
+    dt = time.time()-t
+    print("             plane  calculation:", dt*1000, "ms")
     plane_normal = np.array(plane.normal_vector)
+
+    print("plane_normal:", plane_normal)
 
     target_point, origin = np.array(target_point), np.array(origin)
 
@@ -39,10 +48,30 @@ def get2DProjection(origin, target_point):
 
 
 if __name__ == "__main__":
-    target_point = [2, 2, 1]
-    origin = [0, 0, 0]
-    s, t_1, t_2 = get2DProjection(target_point, origin)
+    # target_point = [2, 2, 1]
+    # origin = [0, 0, 0]
+    # s, t_1, t_2 = get2DProjection(target_point, origin)
 
-    print("s:", s)
-    print("t_1:", t_1)
-    print("t_2:", t_2)
+    # print("s:", s)
+    # print("t_1:", t_1)
+    # print("t_2:", t_2)
+
+    # inputs
+    origin = [1.8222946216366225, 2.049465266111678, 1.5597655075075574]
+    target_point = [3.763766512360378, 1.5694906459965623, 1.5419566181153574]
+
+    # calculation
+    t = time.time()
+
+    points = [origin,
+              target_point,
+              [target_point[0], target_point[1], target_point[2] + 1]]  # add 1 in order not to be collinear
+
+    plane = Plane(points[0], points[1], points[2])
+    plane_normal = np.array(plane.normal_vector)
+    print("plane_normal:", plane_normal)
+
+    dt = time.time()-t
+    print("plane  calculation:", dt*1000, "ms")
+    # expected output
+    plane_normal = [-0.47997462011512, -1.94147189072376, 0]

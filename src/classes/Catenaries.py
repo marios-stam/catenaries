@@ -8,6 +8,7 @@ from scipy.spatial import distance
 from tf import transformations
 from scipy.spatial.transform import Rotation
 from catenary import catenaries
+import time
 
 
 class Catenaries_Handler(Marker):
@@ -120,6 +121,9 @@ class Catenary_Marker_Array(MarkerArray):
         self.markers.append(caten_marker)
 
     def update_curve(self, index, p1, p2, L):
+        # measure time taken to update curve
+
         points = catenaries.getCatenaryCurve3D(p1, p2, L)
+
         points = map(lambda p: Point(p[0], p[1], p[2]), points)
         self.markers[index].points = list(points)
