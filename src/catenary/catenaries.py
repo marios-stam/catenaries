@@ -103,12 +103,6 @@ def getCatenaryCurve2D(P1, P2, L):
     y = a*cosh((x-b)/a)+c  # x2 is the last one
     xy[counter] = [x, y]
 
-    if xy[-1][0] == 0 and xy[-1][1] == 0:
-        print("length:", length)
-        xy = xy[:-1, :]  # delete last row
-    else:
-        pass
-
     if inverse:
         return xy[::-1, :]
     else:
@@ -122,7 +116,9 @@ def getCatenaryCurve3D(P1, P2, L, ax=None):
     trans = Transformation(rotation, translation=P1)
 
     t0 = time.time()
-    s, coords2D_x, coords2D_y = get2DProjection(list(P1), list(P2))
+    # s, coords2D_x, coords2D_y = get2DProjection(list(P1), list(P2))
+    # print("direct:", trans.transformPoint(P2))
+    coords2D_x, _,  coords2D_y, _ = trans.transformPoint(P2)
     dt = time.time()-t0
 
     start2D = [0, 0]
@@ -142,7 +138,7 @@ def getCatenaryCurve3D(P1, P2, L, ax=None):
 
         start3D_from_2DProjection = trans.inverseTransformPoint([start2D[0], start2D[1], 0])
         print("end2D as input:", end2D)
-        end3D_from_2DProjection = trans.inverseTransformPoint([end2D[0], end2D[1], 0])
+        end3D_from_2DProjection = trans.inverseTransformPoint([end2D[0],  0, end2D[1]])
         print("end3D as output:", end3D)
 
         diff1 = start3D-start3D_from_2DProjection[:3]

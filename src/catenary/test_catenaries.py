@@ -128,11 +128,15 @@ def simple():
     ax.set_ylabel('$Y$', fontsize=20)
     ax.set_zlabel('$Z$', fontsize=20)
 
-    P1 = np.array([1, 1, 0])
-    P2 = np.array([2, 2, 0])
-    L = 3
+    P1 = np.array([4.1765446068919205, -2.728077654019848, 1.9755001677695203])
+    P2 = np.array([5.530856032473361, -1.2606496227406319, 2.0872976938804])
+    L = 3.5
+    # P1 = np.array([1, 1, 0])
+    # P2 = np.array([2, 2, 1])
+    # L = 3
 
     points = getCatenaryCurve3D(P1, P2, L, ax)
+    print("END3D:", points[-1])
 
     plt.show()
 
