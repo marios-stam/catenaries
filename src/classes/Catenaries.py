@@ -125,5 +125,18 @@ class Catenary_Marker_Array(MarkerArray):
 
         points = catenaries.getCatenaryCurve3D(p1, p2, L)
 
+        # Calculate latency
+        # diff1 = p1-points[0][:3]
+        # diff2 = p2-points[-1][:3]
+        # print("==========================================================")
+        # print("p1:", p1)
+        # print("p2:", p2)
+        # print()
+        # print("diff1:", diff1)
+        # print("diff2:", diff2)
+        # # distance between points
+        # dist = distance.euclidean(p2, points[-1][:3])
+        # print("dist2:", dist)
+
         points = map(lambda p: Point(p[0], p[1], p[2]), points)
         self.markers[index].points = list(points)

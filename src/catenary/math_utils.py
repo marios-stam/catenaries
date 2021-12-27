@@ -4,6 +4,12 @@ from math import degrees, exp, log, sqrt, atan2
 import math
 import tf.transformations as transformations
 import numpy as np
+from scipy.spatial import distance
+
+try:
+    from .projection import get2DProjection, normalize
+except Exception as exception:
+    from projection import get2DProjection, normalize
 
 
 def cosh(z):
@@ -66,8 +72,6 @@ class Transformation():
         self.matrix = getTransformationMatrix(rotation, translation)
         self.inv_matrix = np.linalg.inv(self.matrix)
 
-        # print(np.dot(self.inv_matrix, self.matrix))
-
     def transformPoint(self, p):
         if len(p) == 3:
             p = np.append(p, 1)
@@ -84,13 +88,25 @@ class Transformation():
 
 
 if __name__ == "__main__":
-    P2 = np.array([2, 2, 0])
-    translation = np.array([1, 1, 0])
-    rotation = np.array([0, 0, 45])
+    P1 = [4.17654461, - 2.72807765, 1.97550017]
+    P2 = [5.53085603, - 1.26064962, 2.08729769]
 
-    trans = Transformation(rotation, translation)
-    p2_1 = trans.transformPoint(P2)
-    p1_2 = trans.inverseTransformPoint(p2_1)
+    angle = calculate2DAngleBetweenPoints(P1, P2)
+    rotation = [0, 0, degrees(-angle)]
+    trans = Transformation(rotation, translation=P1)
 
-    print(p2_1)
-    print(p1_2)
+    s, coords2D_x, coords2D_y = get2DProjection(list(P1), list(P2))
+    end2D = [coords2D_x, coords2D_y]
+    print("end2D", end2D)
+    # end3D_from_2DProjection = trans.inverseTransformPoint([end2D[0], 0, end2D[1]])
+
+    dir_trans = trans.transformPoint(P2)[:3]
+    print("dir_trans:", dir_trans)
+    print("Direct rnasform:", dir_trans)
+    end3D_from_DirectTransform = trans.inverseTransformPoint([end2D[0],  end2D[1], 0])
+
+    print()
+    diff2 = P2-end3D_from_DirectTransform[:3]
+    print("diff2:", diff2)
+    dist = distance.euclidean(P2, end3D_from_DirectTransform[:3])
+    print("dist2:", dist)

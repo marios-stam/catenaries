@@ -5,10 +5,15 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from geometry_msgs.msg import Point
 import time
+from scipy.spatial import distance
 
-from .math_utils import Transformation, calculate2DAngleBetweenPoints, sqrt, sinh, cosh, tanhi
-from .projection import get2DProjection, normalize
-
+try:
+    from .math_utils import Transformation, calculate2DAngleBetweenPoints, sqrt, sinh, cosh, tanhi
+    from .projection import get2DProjection, normalize
+except Exception as exception:
+    from math_utils import Transformation, calculate2DAngleBetweenPoints, sqrt, sinh, cosh, tanhi
+    from projection import get2DProjection, normalize
+    import test_catenaries as test
 
 DEBUG = 0
 PLOT = 0
@@ -31,12 +36,11 @@ def approximateAnumerically(r):
             denum = cosh(Ai)-r
             A_i = A_i-num/denum
             counter = counter + 1
-        # print("Converged in {} loops".format(counter))
+        print("Converged in {} loops".format(counter))
         A = Ai
     else:
         A_approx = 0.25 * (1+3*log(2*r))+sqrt(2*log(2*r/e))
         A = A_approx
-        # print("A_approx:", A_approx)
 
     return A
 
@@ -88,11 +92,16 @@ def getCatenaryCurve2D(P1, P2, L):
     length = (x2-x1)/ddx+1
     xy = np.zeros((int(length), 2), dtype=np.float64)
     counter = 0
-    while x < x2:
+    while x < x2-ddx:
         y = a*cosh((x-b)/a)+c
         xy[counter] = [x, y]
         x = x+ddx
         counter = counter+1
+
+    # manualyy enter last one
+    x = x2
+    y = a*cosh((x-b)/a)+c  # x2 is the last one
+    xy[counter] = [x, y]
 
     if xy[-1][0] == 0 and xy[-1][1] == 0:
         print("length:", length)
@@ -111,31 +120,44 @@ def getCatenaryCurve3D(P1, P2, L, ax=None):
     rotation = [0, 0, degrees(-angle)]
 
     trans = Transformation(rotation, translation=P1)
-    p2_1 = trans.transformPoint(P2)
 
-    print("========================================================")
     t0 = time.time()
     s, coords2D_x, coords2D_y = get2DProjection(list(P1), list(P2))
     dt = time.time()-t0
-    print("2D projection calculation time: {} ms".format(dt*1000))
 
     start2D = [0, 0]
-    ennd2D = [coords2D_x, coords2D_y]
-    points2D = getCatenaryCurve2D(start2D, ennd2D, L)
+    end2D = [coords2D_x, coords2D_y]
 
-    start3D = trans.inverseTransformPoint([start2D[0], 0, start2D[1]])
-    end3D = trans.inverseTransformPoint([ennd2D[0], 0, ennd2D[1]])
-    if DEBUG:
-        print("coords2D:", coords2D_x, coords2D_y)
-        print("start3D:", start3D)
-        print("end3D:", end3D)
+    points2D = getCatenaryCurve2D(start2D, end2D, L)
+
+    if False:
+        print("==================== Transformation Errors ====================")
+        # start3D = trans.inverseTransformPoint([start2D[0], 0, start2D[1]])
+        # end3D = trans.inverseTransformPoint([end2D[0], 0, end2D[1]])
+        start3D = P1
+        end3D = P2
+
+        # start3D_from_points = trans.inverseTransformPoint([points2D[0][0], 0, points2D[0][1]])
+        # end3D_from_points = trans.inverseTransformPoint([points2D[-1][0], 0, points2D[-1][1]])
+
+        start3D_from_2DProjection = trans.inverseTransformPoint([start2D[0], start2D[1], 0])
+        print("end2D as input:", end2D)
+        end3D_from_2DProjection = trans.inverseTransformPoint([end2D[0], end2D[1], 0])
+        print("end3D as output:", end3D)
+
+        diff1 = start3D-start3D_from_2DProjection[:3]
+        diff2 = end3D-end3D_from_2DProjection[:3]
+        print("diff1:", diff1)
+        print("diff2:", diff2)
+        dist = distance.euclidean(end3D, end3D_from_2DProjection[:3])
+        print("dist2:", dist)
 
     # Points3D = map(
     #     lambda point: trans.inverseTransformPoint([point[0], 0, point[1]]), points2D)
     # Points3D = np.array(list(Points3D))
 
     Points3D = [trans.inverseTransformPoint([p[0], 0, p[1]]) for p in points2D]
-    if PLOT:
+    if PLOT or ax != None:
         Points3D = np.array(Points3D)
         ax.plot(Points3D[:, 0], Points3D[:, 1], Points3D[:, 2])
 
@@ -191,41 +213,3 @@ def getForcesOnEnds3D(mass, p1, p2, L, n=2, forceOnP2=False):
         print("Force3D:", Force3D)
 
     return Force3D
-
-
-if __name__ == "__main__":
-    DEBUG = 0
-    PLOT = 0
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    ax.set_xlabel('$X$', fontsize=20)
-    ax.set_ylabel('$Y$', fontsize=20)
-    ax.set_zlabel('$Z$', fontsize=20)
-
-    P1 = np.array([1, 1, 0])
-    P2 = np.array([2, 2, 0])
-    L = 3
-
-    dt_mean = 0
-    times = 100
-    for i in range(times):
-        start = time.time()
-        points = getCatenaryCurve3D(P1, P2, L, ax)
-        dt = time.time()-start
-        dt_mean += dt
-    print("dt_mean:", dt_mean/times*1000, "msec")
-
-    # print(type(points))
-    # print(points.shape)
-
-    # # Tz, Tx = getForcesOnEnds2D(1, P1[0], P2[0], L, n=2)
-    # # print("Tz:{}    Tx:{}".format(Tz, Tx))
-
-    # should_inv = 0
-    # Force3D = getForcesOnEnds3D(1, P1, P2, L, n=2, forceOnP2=should_inv)
-    # # Force3D = normalize(Force3D)
-    # p = P1 if not should_inv else P2
-    # ax.quiver(p[0], p[1], p[2], Force3D[0], Force3D[1],
-    #           Force3D[2], length=0.1, color=(1, 0, 0, 1))
-
-    # plt.show()

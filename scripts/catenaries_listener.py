@@ -17,7 +17,7 @@ catenary_mark_array_pub = rospy.Publisher(
 
 start_point = [0, 0, 0]
 end_point = [2, 0, 0]
-length = 5
+length = 3.5
 
 start_end_points_and_lenghts = [
     [start_point, end_point, length]
@@ -38,7 +38,7 @@ def main():
     transform_template = "/drone"
     points = [0, 0]
 
-    rate = rospy.Rate(60.0)
+    rate = rospy.Rate(30.0)
 
     while not rospy.is_shutdown():
         for i in range(ROPES_NUMBER*2):
