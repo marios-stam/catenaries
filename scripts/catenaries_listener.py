@@ -4,7 +4,7 @@
 import math
 import rospy
 from rospy import topics
-from catenary.msg import drone_pose
+from catenaries.msg import drone_pose
 from visualization_msgs.msg import Marker, MarkerArray, InteractiveMarkerFeedback
 from scipy.spatial import distance
 from tf import transformations
@@ -42,7 +42,8 @@ def main():
 
     while not rospy.is_shutdown():
         for i in range(ROPES_NUMBER*2):
-            transform_name = transform_template + str(i+1)  # the transform name to look for
+            transform_name = transform_template + \
+                str(i+1)  # the transform name to look for
             try:
                 (trans, rot) = tf_listener.lookupTransform(
                     '/world', transform_name, rospy.Time(0))
