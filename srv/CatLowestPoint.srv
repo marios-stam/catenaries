@@ -1,0 +1,5 @@
+float32[3] start
+float32[3] end
+float32 L
+---
+float32[3] lowest_point

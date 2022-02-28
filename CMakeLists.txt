@@ -55,11 +55,10 @@ add_message_files(
 )
 
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
+add_service_files(
+  FILES
+  CatLowestPoint.srv
+)
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -165,6 +164,9 @@ catkin_install_python(PROGRAMS
   scripts/catenaries_listener.py
   scripts/catenaries_test.py
   scripts/inter_marker.py
+  scripts/cat_lowest_pt_srv.py
+  scripts/cat_lowest_pt_srv_client.py
+
 
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
