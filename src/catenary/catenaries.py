@@ -136,9 +136,11 @@ def getCatenaryCurve3D(P1, P2, L, ax=None):
         # start3D_from_points = trans.inverseTransformPoint([points2D[0][0], 0, points2D[0][1]])
         # end3D_from_points = trans.inverseTransformPoint([points2D[-1][0], 0, points2D[-1][1]])
 
-        start3D_from_2DProjection = trans.inverseTransformPoint([start2D[0], start2D[1], 0])
+        start3D_from_2DProjection = trans.inverseTransformPoint(
+            [start2D[0], start2D[1], 0])
         print("end2D as input:", end2D)
-        end3D_from_2DProjection = trans.inverseTransformPoint([end2D[0],  0, end2D[1]])
+        end3D_from_2DProjection = trans.inverseTransformPoint(
+            [end2D[0],  0, end2D[1]])
         print("end3D as output:", end3D)
 
         diff1 = start3D-start3D_from_2DProjection[:3]

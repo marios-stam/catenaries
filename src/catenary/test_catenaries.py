@@ -127,10 +127,13 @@ def simple():
     ax.set_xlabel('$X$', fontsize=20)
     ax.set_ylabel('$Y$', fontsize=20)
     ax.set_zlabel('$Z$', fontsize=20)
+    # set axes limits
+    ax.set_zlim3d(-3, 3)
 
-    P1 = np.array([4.1765446068919205, -2.728077654019848, 1.])
-    P2 = np.array([5.530856032473361, -1.2606496227406319, 2.0872976938804])
-    L = 3.5
+    P1 = np.array([1.2, 1., 0.])
+    P2 = np.array([-1.2, 1., 0.])
+    L = 3
+
     # P1 = np.array([1, 1, 0])
     # P2 = np.array([2, 2, 1])
     # L = 3
