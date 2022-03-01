@@ -24,19 +24,22 @@ def handle_cat_lowest_point(req):
     end = req.end
     L = req.L
 
-    print("start:", start)
-    print("end", end)
-    print("L:", L)
     points = catenaries.getCatenaryCurve3D(start, end, L)
 
     # find the lowest point based on the z coordinate
     min_z_index = np.argmin(points, axis=0)[2]
 
-    print(points[0])
-    print(points[-1])
+    DEBUG = False
+    if DEBUG:
+        print("start:", start)
+        print("end", end)
+        print("L:", L)
+        print(points[0])
+        print(points[-1])
 
-    print(points[min_z_index])
-    print("============================================================")
+        print(points[min_z_index])
+        print("============================================================")
+
     # return lowest point
     return CatLowestPointResponse(points[min_z_index][:-1])
 
