@@ -4,3 +4,4 @@ src/catenary/__pycache__/catenaries.cpython-38.pyc
 src/catenary/__pycache__/math_utils.cpython-38.pyc
 src/catenary/__pycache__/projection.cpython-38.pyc
 src/catenary/__pycache__/test_catenaries.cpython-38.pyc
+*.pyc

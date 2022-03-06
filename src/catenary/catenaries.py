@@ -36,7 +36,7 @@ def approximateAnumerically(r):
             denum = cosh(Ai)-r
             A_i = A_i-num/denum
             counter = counter + 1
-        print("Converged in {} loops".format(counter))
+        # print("Converged in {} loops".format(counter))
         A = Ai
     else:
         A_approx = 0.25 * (1+3*log(2*r))+sqrt(2*log(2*r/e))
