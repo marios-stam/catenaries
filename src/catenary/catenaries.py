@@ -162,6 +162,30 @@ def getCatenaryCurve3D(P1, P2, L, ax=None):
     return Points3D
 
 
+def lowest_point(start, end, L):
+    """
+        Finds the lowest point of a catenary curve given its start,end and length L
+    """
+    points = getCatenaryCurve3D(start, end, L)
+
+    # find the lowest point based on the z coordinate
+    min_z_index = np.argmin(points, axis=0)[2]
+
+    DEBUG = False
+    if DEBUG:
+        print("start:", start)
+        print("end", end)
+        print("L:", L)
+        print(points[0])
+        print(points[-1])
+
+        print(points[min_z_index])
+        print("============================================================")
+
+    # return lowest point
+    return points[min_z_index][:-1]
+
+
 def getForcesOnEnds2D(mass, x1, x2, L, n=2, forceOnP2=False):
     """
     Based on "Decentralized collaborative transport of fabrics using micro-UAVs"
