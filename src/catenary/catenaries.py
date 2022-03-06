@@ -52,6 +52,86 @@ def getCatenaryCurve2D(P1, P2, L):
         P2:point 2
         L:Length of rope
     """
+    x1, x2, inverse, a, b, c = get_cat_problem_constants(P1, P2, L)
+
+    x = x1
+    ddx = 0.01*1
+    length = (x2-x1)/ddx+1
+    xy = np.zeros((int(length), 2), dtype=np.float64)
+    counter = 0
+    while x < x2-ddx:
+        y = a*cosh((x-b)/a)+c
+        xy[counter] = [x, y]
+        x = x+ddx
+        counter = counter+1
+
+    # manualyy enter last one
+    x = x2
+    y = a*cosh((x-b)/a)+c  # x2 is the last one
+    xy[counter] = [x, y]
+
+    if inverse:
+        return xy[::-1, :]
+    else:
+        return xy
+
+
+def getCatenaryCurve2D_optimized_for_lowest_cat_point(P1, P2, L):
+    """
+    2D Catenary curve calculation optimized for the lowest point
+    starting from the middle point and then going right or left to find the lowest point
+    similar to binary search
+    """
+    x1, x2, inverse, a, b, c = get_cat_problem_constants(P1, P2, L)
+
+    # print("x1:", x1)
+    # print("x2:", x2)
+
+    x = x1
+    ddx = 0.01*1
+    length = (x2-x1)/ddx+1
+    xy = np.zeros((1, 2), dtype=np.float64)
+    middle_point = (x2-x1)/2
+
+    x_curr = middle_point
+    y_curr = a*cosh((middle_point-b)/a)+c
+
+    y_right = a*cosh((x_curr+ddx-b)/a)+c
+    y_left = a*cosh((x_curr-ddx-b)/a)+c
+
+    if y_right < y_left:
+        initial_lowest_is_right = True
+        x_curr = middle_point+ddx
+    else:
+        initial_lowest_is_right = False
+        x_curr = middle_point-ddx
+
+    lowest_is_right = initial_lowest_is_right
+    counter = 0
+    while initial_lowest_is_right == lowest_is_right:
+
+        y_right = a*cosh((x_curr+ddx-b)/a)+c
+        y_left = a*cosh((x_curr-ddx-b)/a)+c
+
+        lowest_is_right = y_right < y_left
+        if lowest_is_right:
+            x_curr = x_curr+ddx
+        else:
+            x_curr = x_curr-ddx
+
+        # print("counter:", counter)
+        # print("x_curr:", x_curr)
+        # print("y_left:", y_left)
+        # print("y_right:", y_right)
+        # print("lowest_is_right:", lowest_is_right)
+        # print("============================================================")
+        counter += 1
+    xy[0] = [x_curr, y_curr]
+
+    return xy
+
+
+def get_cat_problem_constants(P1, P2, L):
     if DEBUG:
         print("Getting Catenary2D...")
         print("P1:", P1)
@@ -87,26 +167,7 @@ def getCatenaryCurve2D(P1, P2, L):
     b = xb-a*tanhi(dy/L)
     c = y1-a*cosh((x1-b)/a)
 
-    x = x1
-    ddx = 0.01*1
-    length = (x2-x1)/ddx+1
-    xy = np.zeros((int(length), 2), dtype=np.float64)
-    counter = 0
-    while x < x2-ddx:
-        y = a*cosh((x-b)/a)+c
-        xy[counter] = [x, y]
-        x = x+ddx
-        counter = counter+1
-
-    # manualyy enter last one
-    x = x2
-    y = a*cosh((x-b)/a)+c  # x2 is the last one
-    xy[counter] = [x, y]
-
-    if inverse:
-        return xy[::-1, :]
-    else:
-        return xy
+    return x1, x2, inverse, a, b, c
 
 
 def getCatenaryCurve3D(P1, P2, L, ax=None):
@@ -162,9 +223,35 @@ def getCatenaryCurve3D(P1, P2, L, ax=None):
     return Points3D
 
 
+def getCatenaryCurve3D_optimized_lowest_cat_point(P1, P2, L, ax=None):
+    angle = calculate2DAngleBetweenPoints(P1, P2)
+    rotation = [0, 0, degrees(-angle)]
+
+    trans = Transformation(rotation, translation=P1)
+
+    t0 = time.time()
+    # s, coords2D_x, coords2D_y = get2DProjection(list(P1), list(P2))
+    # print("direct:", trans.transformPoint(P2))
+    coords2D_x, _,  coords2D_y, _ = trans.transformPoint(P2)
+    dt = time.time()-t0
+
+    start2D = [0, 0]
+    end2D = [coords2D_x, coords2D_y]
+
+    points2D = getCatenaryCurve2D_optimized_for_lowest_cat_point(
+        start2D, end2D, L)
+
+    Points3D = [trans.inverseTransformPoint([p[0], 0, p[1]]) for p in points2D]
+    if PLOT or ax != None:
+        Points3D = np.array(Points3D)
+        ax.plot(Points3D[:, 0], Points3D[:, 1], Points3D[:, 2])
+
+    return Points3D
+
+
 def lowest_point(start, end, L):
     """
-        Finds the lowest point of a catenary curve given its start,end and length L
+        Finds the lowest point of a catenary curve given its start, end and length L
     """
     points = getCatenaryCurve3D(start, end, L)
 
@@ -186,20 +273,39 @@ def lowest_point(start, end, L):
     return points[min_z_index][:-1]
 
 
+def lowest_point_optimized(start, end, L):
+    """
+        Finds the lowest point of a catenary curve given its start, end and length L
+    """
+    points = getCatenaryCurve3D_optimized_lowest_cat_point(start, end, L)
+
+    DEBUG = False
+    if DEBUG:
+        print("start:", start)
+        print("end", end)
+        print("L:", L)
+
+        print("Lowest:", points[-1])
+        print("============================================================")
+
+    # return lowest point
+    return points[0][:-1]
+
+
 def getForcesOnEnds2D(mass, x1, x2, L, n=2, forceOnP2=False):
     """
     Based on "Decentralized collaborative transport of fabrics using micro-UAVs"
-    https://www.researchgate.net/publication/335144536_Decentralized_collaborative_transport_of_fabrics_using_micro-UAVs
+    https: // www.researchgate.net/publication/335144536_Decentralized_collaborative_transport_of_fabrics_using_micro-UAVs
     """
     g = 9.8
     Tz = mass*g/n
 
     x0 = (x1+x2)/n
     """
-    The equation L=a*sinh(x0/a) must be solved ,in order to find a
-    So approximateAnumerically(r) could be used 
-    with r=L/x0 and A=x0/a 
-    and a=x0/A
+    The equation L = a*sinh(x0/a) must be solved, in order to find a
+    So approximateAnumerically(r) could be used
+    with r = L/x0 and A = x0/a
+    and a = x0/A
     """
     r = L/x0
     A = approximateAnumerically(r)
