@@ -17,7 +17,7 @@ catenary_mark_array_pub = rospy.Publisher(
 
 start_point = [0, 0, 0]
 end_point = [2, 0, 0]
-length = 3.5
+length = 3  # TODO: make this as ROS parameter
 
 start_end_points_and_lenghts = [
     [start_point, end_point, length]
