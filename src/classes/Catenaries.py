@@ -139,4 +139,4 @@ class Catenary_Marker_Array(MarkerArray):
         # print("dist2:", dist)
 
         points = map(lambda p: Point(p[0], p[1], p[2]), points)
-        self.markers[index].points = list(points)
+        self.markers[index].points = list(points)[: -1]
