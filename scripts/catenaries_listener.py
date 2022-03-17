@@ -17,8 +17,8 @@ catenary_mark_array_pub = rospy.Publisher(
     'catenaries_array',  MarkerArray, queue_size=10)
 
 start_point = [0, 0, 0]
-end_point = [2, 0, 0]
-length = 3  # TODO: make this as ROS parameter
+end_point = [1, 0, 0]
+length = 1.5  # TODO: make this as ROS parameter
 
 start_end_points_and_lenghts = [
     [start_point, end_point, length]
@@ -114,13 +114,12 @@ if __name__ == '__main__':
         print("No leader follower topics found")
 
     realtime = sys.argv[1] == "1"
-
+    print("realtime:", realtime)
     get_points = get_points_realtime if realtime else get_points_planning
 
     rate = rospy.Rate(30.0)
     while not rospy.is_shutdown():
         points = get_points(tf_listener, points)
-
         if points[0] == 0 and points[1] == 0:
             continue
 
