@@ -39,8 +39,11 @@ class Catenaries_Handler(Marker):
 
             p1 = start_point
             p2 = [pos.x, pos.y, pos.z]
-            self.catenaries_array.update_curve(
-                index=0, p1=p1, p2=p2, L=L)
+            try:
+                self.catenaries_array.update_curve(
+                    index=0, p1=p1, p2=p2, L=L)
+            except:
+                rospy.logerr("Error in updating catenary")
 
             self.visusalise()
         dt = time.time()-start
@@ -122,8 +125,11 @@ class Catenary_Marker_Array(MarkerArray):
 
     def update_curve(self, index, p1, p2, L):
         # measure time taken to update curve
-
-        points = catenaries.getCatenaryCurve3D(p1, p2, L)
+        try:
+            points = catenaries.getCatenaryCurve3D(p1, p2, L)
+        except:
+            rospy.logerr("Error in updating catenary")
+            return
 
         # Calculate latency
         # diff1 = p1-points[0][:3]
