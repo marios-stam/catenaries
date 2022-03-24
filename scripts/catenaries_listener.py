@@ -113,7 +113,7 @@ if __name__ == '__main__':
     except:
         print("No leader follower topics found")
 
-    realtime = sys.argv[1] == "1"
+    realtime = 0 if len(sys.argv) == 1 else sys.argv[1] == "1"
     print("realtime:", realtime)
     get_points = get_points_realtime if realtime else get_points_planning
 
