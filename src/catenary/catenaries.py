@@ -8,10 +8,10 @@ import time
 from scipy.spatial import distance
 
 try:
-    from .math_utils import Transformation, calculate2DAngleBetweenPoints, sqrt, sinh, cosh, tanhi
+    from .math_utils import Transformation, calculate2DAngleBetweenPoints, sqrt, sinh, cosh, tanhi, Line
     from .projection import get2DProjection, normalize
 except Exception as exception:
-    from math_utils import Transformation, calculate2DAngleBetweenPoints, sqrt, sinh, cosh, tanhi
+    from math_utils import Transformation, calculate2DAngleBetweenPoints, sqrt, sinh, cosh, tanhi, Line
     from projection import get2DProjection, normalize
     import test_catenaries as test
 
@@ -74,6 +74,205 @@ def getCatenaryCurve2D(P1, P2, L):
         return xy[::-1, :]
     else:
         return xy
+
+
+def findSlope(x1, x2, inverse, a, b, c, lowest_point):
+    """
+    Finds bounding lines of the catenary curve starting from x1 and x2
+    Arguments:
+        x1: x coordinate of the start point
+        x2: x coordinate of the end point
+        inverse: True if the catenary curve is inverted
+        a: catenary parameter
+        b: catenary parameter
+        c: catenary parameter
+        lowest_point: lowest point of the catenary curve in 2D
+    """
+
+    dx = 0.001
+    # x = lowest_point[0]
+    x = x1
+
+    length = (x2-lowest_point[0])/dx
+    print("length:", length)
+    xy = np.zeros((int(length)*2, 2), dtype=np.float64)
+
+    counter = 0
+    while x < x2-dx:
+        print("x:", x)
+        y = a*cosh((x-b)/a)+c
+        xy[counter] = [x, y]
+
+        x += dx
+        counter = counter+1
+
+    if (xy[-1, 0] == 0 and xy[-1, 1] == 0):
+        print("Opa")
+        xy[-1] = [x2, a*cosh((x2-b)/a)+c]
+
+    plt.figure()
+    plt.plot(lowest_point[0], lowest_point[1], 'ro')
+    plt.plot(xy[:, 0], xy[:, 1], 'b')
+    plt.show()
+
+    print("xy:")
+    for p in xy:
+        print(p)
+
+    # get index of the lowest point
+    min_z_index = np.argmin(xy, axis=0)[1]
+    points_right_numbers = []
+    for(i, point) in enumerate(xy[min_z_index+8:-1, :]):
+        # line = Line(xy[i+1], point)
+        line = Line(point, xy[min_z_index + i+1])
+        print("============================================================")
+        print("Checking line between {} and {}".format(point, xy[i+1]))
+
+        # check if all points are left of the line
+        points_left_counter = 0
+        points_left = []
+        points_right = []
+        for point in xy:
+            # print("Checking point:", point)
+            if line.isPointLeft(point) == False:
+                points_left_counter += 1
+                points_left.append(point)
+            else:
+                points_right.append(point)
+
+        points_right_numbers.append(len(points_right))
+
+        points_left = np.array(points_left)
+        points_right = np.array(points_right)
+
+        # print("points_left:", points_left)
+        # print("points_right:", points_right)
+
+        # plt.figure()
+        # xs = [0, 1]
+        # ys = [line.evaluate(xx) for xx in xs]
+
+        # plt.plot(xs, ys, 'b')
+        # plt.plot(point[0], point[1], 'ro')
+        # plt.plot(xy[i+1][0], xy[i+1][1], 'go')
+
+        # if len(points_left) > 0:
+        #     plt.plot(points_left[:, 0], points_left[:, 1], 'yo')
+
+        # plt.plot(points_right[:, 0], points_right[:, 1], 'ko')
+        # plt.show()
+
+        # print("points_left:", points_left_counter)
+        print("points right:", len(points_right))
+
+    plt.figure()
+    plt.plot(points_right_numbers, 'b')
+    plt.show()
+
+    print("Error: No line found")
+    return None
+
+
+def getVLowestPoints(P1, P2, L, safety_horiz_distance):
+    x1, x2, inverse, a, b, c = get_cat_problem_constants(P1, P2, L)
+    print("x1:{}, x2:{}, inverse:{}, a:{}, b:{}, c:{}".format(x1, x2, inverse, a, b, c))
+    lowest = getCatenaryCurve2D_optimized_for_lowest_cat_point(P1, P2, L)[0]
+
+    print("lowest:", lowest)
+
+    # right_line = findSlope(x1, x2, inverse, a, b, c, lowest)
+    right_line, left_line = findBoundingLines(x1, x2, inverse, a, b, c, lowest, safety_horiz_distance)
+    t1 = time.time()
+
+    return lowest, right_line, left_line
+
+
+def findBoundingLines(x1, x2, inverse, a, b, c, lowest, safety_horiz_distance):
+    """
+    Finds bounding lines of the catenary curve starting from x1 and x2
+    Arguments:
+        x1: x coordinate of the start point
+        x2: x coordinate of the end point
+        inverse: True if the catenary curve is inverted
+        a: catenary parameter
+        b: catenary parameter
+        c: catenary parameter
+        lowest: lowest point of the catenary curve in 2D
+    """
+    dx = 0.08
+    # x = lowest[0]
+    x = x1
+
+    length = (x2-x)/dx
+    xy = np.zeros((int(length), 2), dtype=np.float64)
+
+    counter = 0
+    while x < x2-dx:
+        y = a*cosh((x-b)/a)+c
+        xy[counter] = [x, y]
+
+        x += dx
+        counter = counter+1
+
+    xy[-1] = [x2, a*cosh((x2-b)/a)+c]
+
+    # right line
+    vert_point = [lowest[0], lowest[1]]
+    while True:
+        safety_end = [xy[-1][0]+safety_horiz_distance, xy[-1][1]]
+        line_right = Line(vert_point, safety_end)
+
+        allPointsLeft = True
+        for p in xy[int(len(xy)/2):]:
+
+            if not line_right.isPointLeft(p):
+                allPointsLeft = False
+                break
+        if allPointsLeft:
+            break
+
+        vert_point[1] -= 0.2
+
+        # plt.figure()
+        # xs = [lowest[0], safety_end[0]]
+        # ys = [line.evaluate(xx) for xx in xs]
+
+        # plt.plot(xs, ys, 'r')
+        # plt.plot(lowest[0], lowest[1], 'ro')
+        # plt.plot(xy[:-1, 0], xy[:-1, 1], 'b')
+        # plt.axis('equal')
+        # plt.show()
+
+    # left line
+    vert_point = [lowest[0], lowest[1]]
+
+    while True:
+        safety_start = [xy[0][0]-safety_horiz_distance, xy[0][1]]
+        line_left = Line(vert_point, safety_start)
+
+        allPointsRight = True
+        for p in xy[:int(len(xy)/2)]:
+
+            if line_left.isPointLeft(p):
+                allPointsRight = False
+                break
+
+        if allPointsRight:
+            break
+
+        vert_point[1] -= 0.2
+
+        # plt.figure()
+        # xs = [lowest[0], safety_end[0]]
+        # ys = [line.evaluate(xx) for xx in xs]
+
+        # plt.plot(xs, ys, 'r')
+        # plt.plot(lowest[0], lowest[1], 'ro')
+        # plt.plot(xy[:-1, 0], xy[:-1, 1], 'b')
+        # plt.axis('equal')
+        # plt.show()
+
+    return line_right, line_left
 
 
 def getCatenaryCurve2D_optimized_for_lowest_cat_point(P1, P2, L):

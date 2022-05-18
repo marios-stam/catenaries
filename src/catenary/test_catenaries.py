@@ -1,3 +1,4 @@
+from sympy import intersection
 from sympy.geometry.point import Point2D
 from math import log, degrees, e
 import numpy as np
@@ -140,7 +141,7 @@ def benchmark_cat_lowest_function():
     P1 = np.array([1, 1, 1])
     P2 = np.array([2, 2, 0])
     L = 3
-    times = 100000
+    times = 100
 
     dt_mean = 0
     for i in range(times):
@@ -235,10 +236,74 @@ def cat_lowest_function_test(optimized=True):
         point = lowest_point(P1, P2, L)
 
 
+def dynamic_lowest_point_test():
+    p1 = [0, 0]
+    p2 = [1, -0.2]
+    L = 2
+
+    t = time.time()
+    points = getCatenaryCurve2D(p1, p2, L)
+    diff1 = p1-points[0][:3]
+    diff2 = p2-points[-1][:3]
+    dt = time.time()-t
+
+    print("==========================================================")
+    print("p1:", p1)
+    print("p2:", p2)
+    print()
+    print("Calculation time:", dt*1000, "ms")
+    print("diff1:", diff1)
+    print("diff2:", diff2)
+    # distance between points
+    dist = distance.euclidean(p2, points[-1][:3])
+    print("dist2:", dist)
+
+    safety_horiz_distance = 0.2
+    lowest, right_line, left_line = getVLowestPoints(p1, p2, L, safety_horiz_distance)
+    print("lowest:", lowest)
+
+    intersection = right_line.intersection(left_line)
+
+    plt.figure()
+    if right_line != None:
+        # plot right line
+        print("right_line:", right_line)
+        right_line_xs = [intersection[0],  p2[0]+safety_horiz_distance]
+        right_line_points = [right_line.evaluate(x) for x in right_line_xs]
+        plt.plot(right_line_xs, right_line_points, 'r-', linestyle="--")
+
+    if left_line != None:
+        # plot left line
+        print("left_line:", left_line)
+        left_line_xs = [p1[0]-safety_horiz_distance,  intersection[0]]
+        left_line_points = [left_line.evaluate(x) for x in left_line_xs]
+        plt.plot(left_line_xs, left_line_points, 'r-', linestyle="--")
+
+    plt.plot([left_line_xs[0], p1[0]], [left_line_points[0], p1[1]], 'r-', linestyle="--")
+    plt.plot([p1[0], lowest[0]], [p1[1], lowest[1]], 'r-', linestyle="--")
+
+    plt.plot([left_line_xs[0], lowest[0]], [left_line_points[0]+0.4, lowest[1]], 'y-', linestyle="--")
+
+    plt.plot([right_line_xs[-1], p2[0]], [right_line_points[-1], p2[1]], 'r-', linestyle="--")
+    plt.plot([p2[0], lowest[0]], [p2[1], lowest[1]], 'r-', linestyle="--")
+
+    print("p1:", p1)
+    print("p2:", p2)
+    print("lowest:", lowest)
+
+    plt.plot(points[:-1, 0], points[:-1, 1])
+    plt.plot(p1[0], p1[1], 'ro')
+    plt.plot(p2[0], p2[1], 'ro')
+    plt.plot(lowest[0], lowest[1], 'go')
+
+    plt.show()
+
+
 if __name__ == "__main__":
     # main_3D()
     # main_2D()
     # benchmark()
     # benchmark_pycatenaries()
     # cat_lowest_function_test()
-    benchmark_cat_lowest_function()
+    # benchmark_cat_lowest_function()
+    dynamic_lowest_point_test()
